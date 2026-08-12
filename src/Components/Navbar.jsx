@@ -4,10 +4,8 @@ import { Link } from "react-router-dom";
 // Datos de navegacion y redes sociales
 const navbarlinks = [
   { id: 1, title: "Inicio", link: "/" },
-  { id: 2, title: "Calidad del aire", link: "/calidad" },
-  { id: 3, title: "Contaminantes", link: "/contaminantes" },
-  {id: 4, title: "Mi ubicacion", link: "/mi-ubicacion" },
-  {id: 5, title: "Glosario de indices", link: "/glosario" },
+  { id: 2, title: "Contaminantes", link: "/contaminantes" },
+  { id: 3, title: "Glosario de indices", link: "/glosario" },
 ];
 
 

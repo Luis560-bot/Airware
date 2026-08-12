@@ -1,6 +1,17 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600;700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 @import "bootstrap-icons/font/bootstrap-icons";
 @import "tailwindcss";
+
+@theme {
+  --color-smog: #e9e5db;
+  --color-smog-deep: #cfc8b4;
+  --color-ink: #1b2026;
+  --color-good: #3f9d4e;
+  --color-moderate: #e5a91e;
+  --color-hazard: #d6452f;
+  --font-display: "Archivo", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
 
 body {
   font-family: "Poppins", sans-serif;
@@ -89,5 +100,126 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Inicio — "El aire no se ve. Se lee."
+   A smoggy Lima sky as a monitoring-station readout.
+------------------------------------------------------------------- */
+
+.page-haze {
+  background:
+    radial-gradient(120% 90% at 78% 16%, rgba(255, 252, 243, 0.95) 0%, rgba(255, 252, 243, 0) 48%),
+    linear-gradient(180deg, #e9e5db 0%, #ddd6c6 55%, #cfc8b4 100%);
+}
+
+.haze-in {
+  opacity: 1;
+  animation: hazeIn 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes hazeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.93);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+.fade-up {
+  opacity: 1;
+  animation: fadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.needle {
+  transform: rotate(var(--needle-to));
+  animation: needleSweep 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.45s both;
+}
+
+@keyframes needleSweep {
+  from {
+    transform: rotate(-135deg);
+  }
+  to {
+    transform: rotate(var(--needle-to));
+  }
+}
+
+.ring-spin {
+  animation: ringSpin 90s linear infinite;
+}
+
+@keyframes ringSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.live-dot {
+  animation: livePulse 2.4s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .haze-in,
+  .fade-up,
+  .needle,
+  .ring-spin,
+  .live-dot {
+    animation: none !important;
+  }
+  .needle {
+    transform: rotate(var(--needle-to)) !important;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+.trace-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: traceDraw 1.6s cubic-bezier(0.4, 0, 0.2, 1) 0.5s forwards;
+}
+
+@keyframes traceDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trace-draw {
+    animation: none;
+    stroke-dashoffset: 0;
   }
 }
