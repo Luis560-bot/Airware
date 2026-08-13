@@ -1,146 +1,373 @@
-@import url("https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600;700&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap");
 @import "bootstrap-icons/font/bootstrap-icons";
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------
+   Airware — sistema de diseño
+   Identidad: cielo, atmósfera y calidad del aire de Lima.
+------------------------------------------------------------------- */
+
 @theme {
-  --color-smog: #e9e5db;
-  --color-smog-deep: #cfc8b4;
-  --color-ink: #1b2026;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --color-night: #0b1520;
+  --color-ink: #1c2a38;
+  --color-slate: #5b6b7b;
+  --color-fog: #94a5b5;
+  --color-mist: #e9f1f8;
+  --color-skyline: #d9e9f7;
+  --color-cloud: #f6fafd;
+  --color-aire: #3f7eb0;
+  --color-aire-deep: #2a5f8e;
   --color-good: #3f9d4e;
   --color-moderate: #e5a91e;
   --color-hazard: #d6452f;
-  --font-display: "Archivo", sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  font-family: "Poppins", sans-serif;
-  background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 45%, #f0f9ff 100%);
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background-color: var(--color-cloud);
+  background-image:
+    radial-gradient(1100px 560px at 88% -8%, rgba(217, 233, 247, 0.9), transparent 62%),
+    radial-gradient(900px 480px at -12% 24%, rgba(233, 241, 248, 0.9), transparent 55%),
+    linear-gradient(180deg, #f8fbfe 0%, #eef5fb 42%, #e6eff7 100%);
+  background-attachment: fixed;
   min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-.fade-in {
-  opacity: 0;
-  animation: fadeIn 1s ease-in forwards;
+::selection {
+  background: rgba(63, 126, 176, 0.22);
 }
 
-@keyframes fadeIn {
-  from {
+@layer components {
+  /* ---------------------------------------------------------------
+     Superficies y contenedores
+  ---------------------------------------------------------------- */
+
+  .glass {
+    background: rgba(255, 255, 255, 0.72);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    backdrop-filter: blur(14px) saturate(1.4);
+    border: 1px solid rgba(27, 42, 56, 0.08);
+  }
+
+  .card {
+    background: #ffffff;
+    border: 1px solid rgba(27, 42, 56, 0.08);
+    border-radius: 1.25rem;
+    box-shadow: 0 1px 2px rgba(11, 21, 32, 0.04), 0 8px 24px -18px rgba(11, 21, 32, 0.18);
+  }
+
+  .card-interactive {
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+
+  .card-interactive:hover {
+    transform: translateY(-3px);
+    border-color: rgba(63, 126, 176, 0.35);
+    box-shadow: 0 2px 4px rgba(11, 21, 32, 0.05), 0 20px 40px -24px rgba(11, 21, 32, 0.28);
+  }
+
+  .atmosphere {
+    position: relative;
+  }
+
+  .atmosphere::before,
+  .atmosphere::after {
+    content: "";
+    position: fixed;
+    z-index: -1;
+    border-radius: 9999px;
+    pointer-events: none;
+  }
+
+  .atmosphere::before {
+    width: 560px;
+    height: 560px;
+    top: -180px;
+    right: -160px;
+    background: radial-gradient(circle, rgba(63, 126, 176, 0.12), transparent 65%);
+  }
+
+  .atmosphere::after {
+    width: 420px;
+    height: 420px;
+    bottom: -140px;
+    left: -120px;
+    background: radial-gradient(circle, rgba(217, 233, 247, 0.85), transparent 65%);
+  }
+
+  /* ---------------------------------------------------------------
+     Tipografía utilitaria
+  ---------------------------------------------------------------- */
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--color-slate);
+  }
+
+  .eyebrow-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--color-aire);
+    margin-right: 0.5rem;
+    vertical-align: 1px;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* ---------------------------------------------------------------
+     Botones
+  ---------------------------------------------------------------- */
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.7rem 1.4rem;
+    transition: all 0.25s ease;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background: var(--color-ink);
+    color: #fff;
+    box-shadow: 0 10px 24px -14px rgba(11, 21, 32, 0.45);
+  }
+
+  .btn-primary:hover {
+    background: var(--color-night);
+    transform: translateY(-1px);
+    box-shadow: 0 14px 30px -14px rgba(11, 21, 32, 0.5);
+  }
+
+  .btn-ghost {
+    background: #fff;
+    color: var(--color-ink);
+    border: 1px solid rgba(27, 42, 56, 0.14);
+  }
+
+  .btn-ghost:hover {
+    border-color: rgba(63, 126, 176, 0.5);
+    color: var(--color-aire-deep);
+    transform: translateY(-1px);
+  }
+
+  .btn:focus-visible {
+    outline: 2px solid var(--color-aire);
+    outline-offset: 2px;
+  }
+
+  /* ---------------------------------------------------------------
+     Chips (filtros y etiquetas)
+  ---------------------------------------------------------------- */
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(27, 42, 56, 0.12);
+    padding: 0.42rem 0.9rem;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-slate);
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    white-space: nowrap;
+  }
+
+  .chip:hover {
+    border-color: rgba(63, 126, 176, 0.45);
+    color: var(--color-ink);
+  }
+
+  .chip-active {
+    background: var(--color-aire);
+    border-color: var(--color-aire);
+    color: #fff;
+    box-shadow: 0 8px 18px -10px rgba(63, 126, 176, 0.55);
+  }
+
+  .chip-active:hover {
+    color: #fff;
+  }
+
+  .chip-count {
+    font-size: 9px;
+    opacity: 0.65;
+    font-weight: 600;
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 9999px;
+    padding: 0.28rem 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    background: var(--color-mist);
+    color: var(--color-slate);
+  }
+
+  .tag-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+  }
+
+  /* ---------------------------------------------------------------
+     Buscador
+  ---------------------------------------------------------------- */
+
+  .search-shell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #fff;
+    border: 1px solid rgba(27, 42, 56, 0.14);
+    border-radius: 1.1rem;
+    padding: 0.85rem 1.1rem;
+    box-shadow: 0 1px 2px rgba(11, 21, 32, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .search-shell:focus-within {
+    border-color: var(--color-aire);
+    box-shadow: 0 0 0 4px rgba(63, 126, 176, 0.14), 0 12px 28px -18px rgba(11, 21, 32, 0.35);
+  }
+
+  .search-input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 1rem;
+    color: var(--color-ink);
+  }
+
+  .search-input::placeholder {
+    color: var(--color-fog);
+  }
+
+  .search-input::-webkit-search-cancel-button,
+  .search-input::-webkit-search-decoration {
+    -webkit-appearance: none;
+  }
+
+  .kbd {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-slate);
+    border: 1px solid rgba(27, 42, 56, 0.14);
+    border-bottom-width: 2px;
+    border-radius: 6px;
+    padding: 0.15rem 0.4rem;
+    background: #fff;
+  }
+
+  /* ---------------------------------------------------------------
+     Estados en vivo
+  ---------------------------------------------------------------- */
+
+  .live-dot {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background: var(--color-good);
+  }
+
+  .live-dot::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 9999px;
+    border: 1px solid currentColor;
+    animation: livePulse 2.2s ease-out infinite;
+  }
+
+  /* ---------------------------------------------------------------
+     Animaciones de entrada
+  ---------------------------------------------------------------- */
+
+  .fade-up {
+    animation: fadeUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .float-slow {
+    animation: floatSlow 9s ease-in-out infinite;
+  }
+
+  .spin-slow {
+    animation: spinSlow 30s linear infinite;
+  }
+
+  .shimmer {
+    background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%);
+    background-size: 220% 100%;
+    animation: shimmer 2.4s linear infinite;
+  }
+
+  /* ---------------------------------------------------------------
+     Scrollbar y utilidades
+  ---------------------------------------------------------------- */
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes livePulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(1.6);
     opacity: 0;
   }
-  to {
-    opacity: 1;
-  }
-}
-
-.slide-in-left {
-  animation-name: slideInLeft;
-  animation-duration: 0.8s;
-  animation-timing-function: ease-out;
-  animation-fill-mode: both;
-}
-
-@keyframes slideInLeft {
-  from {
+  100% {
     opacity: 0;
-    transform: translateX(-50px);
   }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.delay-1 { animation-delay: 0.2s; }
-.delay-2 { animation-delay: 0.4s; }
-.delay-3 { animation-delay: 0.6s; }
-
-.slide-in-right {
-  animation-name: slideInRight;
-  animation-duration: 0.8s;
-  animation-timing-function: ease-out;
-  animation-fill-mode: both;
-}
-
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.delay-4 { animation-delay: 0.2s; }
-.delay-5 { animation-delay: 0.4s; }
-.delay-6 { animation-delay: 0.6s; }
-
-.slide-in-up {
-  opacity: 0;
-  transform: translateY(50px);
-  animation: slideInUp 0.8s ease-out forwards;
-}
-
-@keyframes slideInUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.slide-in-down {
-  opacity: 0;
-  transform: translateY(-50px);
-  animation: slideInDown 0.8s ease-out forwards;
-}
-
-@keyframes slideInDown {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ------------------------------------------------------------------
-   Inicio — "El aire no se ve. Se lee."
-   A smoggy Lima sky as a monitoring-station readout.
-------------------------------------------------------------------- */
-
-.page-haze {
-  background:
-    radial-gradient(120% 90% at 78% 16%, rgba(255, 252, 243, 0.95) 0%, rgba(255, 252, 243, 0) 48%),
-    linear-gradient(180deg, #e9e5db 0%, #ddd6c6 55%, #cfc8b4 100%);
-}
-
-.haze-in {
-  opacity: 1;
-  animation: hazeIn 1s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes hazeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.93);
-    filter: blur(8px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-    filter: blur(0);
-  }
-}
-
-.fade-up {
-  opacity: 1;
-  animation: fadeUp 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -148,78 +375,51 @@ body {
   }
 }
 
-.needle {
-  transform: rotate(var(--needle-to));
-  animation: needleSweep 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.45s both;
-}
-
-@keyframes needleSweep {
-  from {
-    transform: rotate(-135deg);
+@keyframes floatSlow {
+  0%,
+  100% {
+    transform: translateY(0);
   }
-  to {
-    transform: rotate(var(--needle-to));
+  50% {
+    transform: translateY(-10px);
   }
 }
 
-.ring-spin {
-  animation: ringSpin 90s linear infinite;
-}
-
-@keyframes ringSpin {
+@keyframes spinSlow {
   to {
     transform: rotate(360deg);
   }
 }
 
-.live-dot {
-  animation: livePulse 2.4s ease-in-out infinite;
-}
-
-@keyframes livePulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.25;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .haze-in,
-  .fade-up,
-  .needle,
-  .ring-spin,
-  .live-dot {
-    animation: none !important;
-  }
-  .needle {
-    transform: rotate(var(--needle-to)) !important;
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
-  }
-}
-
-.trace-draw {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: traceDraw 1.6s cubic-bezier(0.4, 0, 0.2, 1) 0.5s forwards;
-}
-
-@keyframes traceDraw {
+@keyframes shimmer {
   to {
-    stroke-dashoffset: 0;
+    background-position: -220% 0;
   }
 }
 
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(91, 107, 123, 0.35);
+  border-radius: 9999px;
+  border: 3px solid var(--color-cloud);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .trace-draw {
-    animation: none;
-    stroke-dashoffset: 0;
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
