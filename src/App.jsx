@@ -1,4 +1,5 @@
 import Navbar from "./Components/Navbar";
+import Footer from "./Components/Footer";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Contaminantes from "./Pages/Contaminantes";
 import Glosario from "./Pages/Glosario";
@@ -101,16 +102,23 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Navbar />
+      <Navbar currentPm25={currentPm25} />
       {data ? (
         <Routes>
           <Route path="/" element={<Inicio currentPm25={currentPm25} />} />
-          <Route path="/contaminantes" element={<Contaminantes />} />
-          <Route path="/glosario" element={<Glosario />} />
+          <Route
+            path="/contaminantes"
+            element={<Contaminantes currentPm25={currentPm25} />}
+          />
+          <Route
+            path="/glosario"
+            element={<Glosario currentPm25={currentPm25} />}
+          />
         </Routes>
       ) : (
         <Cargando />
       )}
+      <Footer />
     </BrowserRouter>
   );
 }

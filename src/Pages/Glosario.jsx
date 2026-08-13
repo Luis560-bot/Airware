@@ -1,7 +1,6 @@
-import React from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-
-import "../index.css";
+import { CATEGORIAS, getBanda, normalizar } from "../lib/aire";
 
 const entradas = [
   {
@@ -166,235 +165,409 @@ const entradas = [
   },
 ];
 
-const alfabeto = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ".split("").concat("µ");
-
-// Busca el id de una entrada para que las remisiones internas funcionen.
-const getId = (term) => {
-  const found = entradas.find((entry) => entry.termino === term);
-  return found ? found.id : "";
+const GRUPOS = {
+  "anatomía": "Anatomía",
+  "general": "General",
+  "gas": "Gases",
+  "índice": "Índices",
+  "unidad": "Unidades",
+  "materia": "Partículas",
+  "partícula": "Partículas",
+  "clima": "Clima",
 };
 
-const Glosario = () => {
-  const secciones = [];
+const ORDEN_GRUPOS = [
+  "Todos",
+  "Partículas",
+  "Gases",
+  "Unidades",
+  "Índices",
+  "Anatomía",
+  "Clima",
+  "General",
+];
 
-  // Agrupa todas las entradas por letra para construir el índice alfabético.
-  entradas.forEach((entrada) => {
-    const existente = secciones.find(
-      (seccion) => seccion.letra === entrada.letra,
-    );
+const Glosario = ({ currentPm25 }) => {
+  const [grupo, setGrupo] = useState("Todos");
+  const [query, setQuery] = useState("");
+  const searchRef = useRef(null);
 
-    if (existente) {
-      existente.entradas.push(entrada);
-    } else {
-      secciones.push({ letra: entrada.letra, entradas: [entrada] });
-    }
-  });
+  const visibles = useMemo(() => {
+    const aliasMap = {};
+    entradas.forEach((e) => {
+      if (e.redirige) {
+        (aliasMap[e.redirige] = aliasMap[e.redirige] || []).push(e.termino);
+      }
+    });
 
-  const definiciones = entradas.filter((entrada) => entrada.def).length;
-  const remisiones = entradas.length - definiciones;
+    return entradas
+      .filter((e) => e.def)
+      .map((e) => ({
+        ...e,
+        grupo: GRUPOS[e.cat] ?? "General",
+        alias: aliasMap[e.termino] ?? null,
+      }))
+      .sort((a, b) => a.termino.localeCompare(b.termino, "es"));
+  }, []);
+
+  const filtradas = useMemo(() => {
+    const q = normalizar(query.trim());
+    return visibles.filter((e) => {
+      const porGrupo = grupo === "Todos" || e.grupo === grupo;
+      const porTexto =
+        !q ||
+        normalizar(
+          [
+            e.termino,
+            e.alt,
+            e.def,
+            e.nota,
+            e.grupo,
+            (e.alias ?? []).join(" "),
+          ].join(" "),
+        ).includes(q);
+      return porGrupo && porTexto;
+    });
+  }, [visibles, grupo, query]);
+
+  const secciones = useMemo(() => {
+    const mapa = {};
+    filtradas.forEach((e) => {
+      (mapa[e.letra] = mapa[e.letra] || []).push(e);
+    });
+    return Object.keys(mapa).map((letra) => ({ letra, entradas: mapa[letra] }));
+  }, [filtradas]);
+
+  const hayFiltros = grupo !== "Todos" || query.trim() !== "";
+  const remisiones = entradas.length - visibles.length;
+  const banda = currentPm25 > 0 ? getBanda(currentPm25) : null;
+
+  const limpiar = () => {
+    setQuery("");
+    setGrupo("Todos");
+  };
+
+  const irALetra = (letra) => {
+    document
+      .getElementById(`letra-${letra}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  useEffect(() => {
+    const onKey = (ev) => {
+      if (ev.key === "/" && ev.target.tagName !== "INPUT" && ev.target.tagName !== "TEXTAREA") {
+        ev.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   return (
-    <div className="page-haze min-h-screen pt-24 sm:pt-28 pb-16 overflow-hidden">
-      <div className="max-w-5xl mx-auto px-5 sm:px-8">
+    <div className="atmosphere min-h-screen pt-28 sm:pt-32 pb-24">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <header>
-          <p
-            className="fade-up font-mono text-[11px] sm:text-xs uppercase tracking-[0.28em] text-ink/55"
-            style={{ animationDelay: "0.05s" }}
-          >
-            Diccionario del aire · Definiciones no oficiales
+          <p className="fade-up eyebrow flex items-center">
+            <span className="eyebrow-dot" aria-hidden="true" />
+            Glosario · Vocabulario del aire de Lima
           </p>
 
           <h1
-            className="fade-up mt-8 font-display font-black tracking-tight leading-[0.95] text-4xl sm:text-5xl lg:text-6xl text-ink"
-            style={{ animationDelay: "0.15s", fontStretch: "125%" }}
+            className="fade-up mt-5 font-display font-bold tracking-tight leading-[1.02] text-balance text-4xl sm:text-5xl lg:text-6xl text-ink"
+            style={{ animationDelay: "0.1s" }}
           >
-            Palabras que flotan en el aire.
+            Palabras que flotan
+            <br className="hidden sm:block" /> en el aire.
           </h1>
 
-          <p
-            className="fade-up mt-6 text-ink/70 text-base sm:text-lg max-w-xl leading-relaxed font-medium"
-            style={{ animationDelay: "0.3s" }}
-          >
-            Todo lo que este sitio mide, explicado de la A a la µ con
-            definiciones nuestras y culpa de nadie.
-          </p>
-
-          <ul
-            className="fade-up mt-5 space-y-2 text-sm sm:text-base text-ink/70 max-w-xl"
-            style={{ animationDelay: "0.38s" }}
-          >
-            <li>• Cada término tiene una definición corta y fácil de leer.</li>
-            <li>• Algunas entradas te mandan a otra palabra relacionada.</li>
-            <li>
-              • Sirve para entender mejor lo que ves en Inicio y Contaminantes.
-            </li>
-          </ul>
-
-          <div
-            className="fade-up mt-6 flex flex-wrap items-center gap-4"
-            style={{ animationDelay: "0.45s" }}
-          >
-            <p className="font-mono text-[11px] sm:text-xs uppercase tracking-[0.2em] text-ink/45">
-              {definiciones} definiciones · {remisiones} remisiones · 0 relación
-              con la RAE
-            </p>
-            <Link
-              to="/"
-              className="px-5 py-2.5 bg-ink text-smog text-sm font-semibold tracking-wide rounded-full hover:-translate-y-0.5 hover:shadow-lg hover:shadow-ink/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink transition-all duration-300"
+          <div className="fade-up mt-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+            <p
+              className="max-w-xl text-base sm:text-lg text-slate leading-relaxed"
+              style={{ animationDelay: "0.2s" }}
             >
-              Volver al inicio
-            </Link>
+              Cada término del sitio, explicado en una definición corta. Busca
+              por nombre, fórmula o texto, o navega el índice alfabético.
+            </p>
+            <p
+              className="font-mono text-[11px] uppercase tracking-wider text-fog shrink-0"
+              style={{ animationDelay: "0.25s" }}
+            >
+              {visibles.length} definiciones · {remisiones} remisiones · 0
+              relación con la RAE
+            </p>
           </div>
         </header>
 
-        {/* Índice alfabético */}
-        <nav
-          className="fade-up sticky top-16 sm:top-20 z-30 -mx-5 sm:-mx-8 px-5 sm:px-8 py-3 mt-10 bg-smog/85 backdrop-blur-sm"
-          style={{ animationDelay: "0.5s" }}
-          aria-label="Índice alfabético"
+        <section
+          className="fade-up mt-10 grid gap-5 lg:grid-cols-[minmax(0,1fr)_290px] items-start"
+          style={{ animationDelay: "0.3s" }}
         >
-          {/* Índice fijo arriba para saltar rápido entre letras. */}
-          <div className="flex flex-wrap gap-y-1">
-            {alfabeto.map((l) => {
-              const activa = secciones.some((s) => s.letra === l);
-              return activa ? (
-                <a
-                  key={l}
-                  href={`#seccion-${l}`}
-                  className="font-mono text-sm sm:text-base font-semibold text-ink px-1.5 hover:bg-ink/5 focus-visible:outline-2 focus-visible:outline-ink transition-colors"
+          <div className="card p-4 sm:p-5">
+            <label
+              htmlFor="buscar-glosario"
+              className="eyebrow flex items-center gap-2 px-1"
+            >
+              <i className="bi bi-search text-sm" aria-hidden="true" />
+              Busca un término, una fórmula o una idea
+            </label>
+
+            <div className="mt-3 search-shell">
+              <input
+                id="buscar-glosario"
+                ref={searchRef}
+                type="search"
+                value={query}
+                onChange={(ev) => setQuery(ev.target.value)}
+                placeholder="Ej. PM2.5, smog, microgramo…"
+                aria-label="Buscar en el glosario"
+                className="search-input"
+              />
+              {query ? (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  aria-label="Borrar búsqueda"
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-fog hover:text-ink hover:bg-mist transition-colors"
                 >
-                  {l}
-                </a>
+                  <i className="bi bi-x-lg text-sm" aria-hidden="true" />
+                </button>
               ) : (
-                <span
-                  key={l}
-                  className="font-mono text-sm sm:text-base text-ink/20 px-1.5"
-                  aria-hidden="true"
-                >
-                  {l}
+                <span className="kbd" aria-hidden="true">
+                  /
                 </span>
-              );
-            })}
-          </div>
-        </nav>
+              )}
+            </div>
 
-        {/* Entradas agrupadas por letra */}
-        <main className="mt-6">
-          {secciones.map((s) => {
-            const primera = s.entradas[0].termino;
-            const ultima = s.entradas[s.entradas.length - 1].termino;
-            return (
-              <section
-                key={s.letra}
-                id={`seccion-${s.letra}`}
-                className="scroll-mt-36"
-              >
-                {/* Cada bloque muestra una letra, luego sus palabras y sus remisiones. */}
-                <header className="flex items-center gap-4 pt-10">
-                  <span
-                    className="font-display font-black text-4xl sm:text-5xl leading-none tracking-tight text-ink"
-                    style={{ fontStretch: "125%" }}
+            <div className="mt-4 flex flex-wrap gap-2">
+              {ORDEN_GRUPOS.map((g) => {
+                const n =
+                  g === "Todos"
+                    ? visibles.length
+                    : visibles.filter((e) => e.grupo === g).length;
+                const activo = grupo === g;
+                return (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setGrupo(g)}
+                    aria-pressed={activo}
+                    className={`chip ${activo ? "chip-active" : ""}`}
                   >
-                    {s.letra}
-                  </span>
-                  {primera !== ultima && (
-                    <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink/45">
-                      {primera}
-                    </span>
-                  )}
-                  <span className="flex-1 border-t border-ink/15" />
-                  <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-ink/45">
-                    {ultima}
-                  </span>
-                </header>
+                    {g}
+                    <span className="chip-count">{n}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-                {s.entradas.map((e) =>
-                  // Si la entrada solo redirige, se muestra una tarjeta breve con enlace interno.
-                  e.redirige ? (
-                    <article
-                      key={e.id}
-                      id={e.id}
-                      className="scroll-mt-44 py-5 border-b border-ink/10"
-                    >
-                      <h3
-                        className="font-display font-bold text-xl tracking-tight text-ink"
-                        style={{ fontStretch: "125%" }}
+          {banda && (
+            <aside className="card p-5">
+              <p className="eyebrow flex items-center gap-2">
+                <span
+                  className="live-dot"
+                  style={{ background: banda.color, color: banda.color }}
+                  aria-hidden="true"
+                />
+                Lectura en vivo
+              </p>
+              <p className="mt-3 flex items-end gap-2">
+                <span
+                  className="font-mono font-semibold text-4xl leading-none"
+                  style={{ color: banda.color }}
+                >
+                  {currentPm25.toFixed(2)}
+                </span>
+                <span className="pb-1 font-mono text-[11px] uppercase tracking-wider text-slate">
+                  µg/m³ PM2.5
+                </span>
+              </p>
+              <div className="mt-3 h-1.5 rounded-full overflow-hidden bg-mist">
+                <div
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{
+                    width: `${Math.min(100, (currentPm25 / 40) * 100)}%`,
+                    background: banda.color,
+                  }}
+                />
+              </div>
+              <p className="mt-2 font-mono text-[11px] uppercase tracking-wider text-slate">
+                Aire {banda.label} en Lima ahora
+              </p>
+            </aside>
+          )}
+        </section>
+
+        <div
+          className="fade-up mt-8 flex items-center justify-between gap-3"
+          style={{ animationDelay: "0.35s" }}
+        >
+          <p className="font-mono text-[11px] uppercase tracking-wider text-slate">
+            {filtradas.length} de {visibles.length} términos
+          </p>
+          {hayFiltros && (
+            <button
+              type="button"
+              onClick={limpiar}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-slate hover:text-ink transition-colors"
+            >
+              <i className="bi bi-arrow-counterclockwise text-xs" aria-hidden="true" />
+              Limpiar filtros
+            </button>
+          )}
+        </div>
+
+        {filtradas.length === 0 ? (
+          <div className="card mt-4 px-6 py-16 text-center">
+            <span className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-mist text-aire text-2xl">
+              <i className="bi bi-cloud-haze2" aria-hidden="true" />
+            </span>
+            <h2
+              className="mt-5 font-display font-bold text-2xl tracking-tight text-ink"
+            >
+              No encontramos «{query.trim()}»
+            </h2>
+            <p className="mt-2 text-sm text-slate max-w-sm mx-auto">
+              Revisa la ortografía o prueba con PM2.5, smog u ozono. El
+              glosario es corto, pero selecto.
+            </p>
+            <button type="button" onClick={limpiar} className="btn btn-primary mt-7">
+              Limpiar búsqueda
+            </button>
+          </div>
+        ) : (
+          <main className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_3.5rem] items-start">
+            <div>
+              <nav
+                aria-label="Índice alfabético"
+                className="mb-6 lg:hidden no-scrollbar flex items-center gap-2 overflow-x-auto py-1"
+              >
+                <span className="shrink-0 eyebrow">A–Z</span>
+                {secciones.map(({ letra, entradas }) => (
+                  <button
+                    key={letra}
+                    type="button"
+                    onClick={() => irALetra(letra)}
+                    className="shrink-0 flex items-baseline gap-1 px-3 py-1.5 rounded-lg border border-ink/10 bg-white font-mono text-xs text-slate hover:text-ink hover:border-aire/40 transition-colors"
+                  >
+                    {letra}
+                    <span className="text-[9px] text-fog">{entradas.length}</span>
+                  </button>
+                ))}
+              </nav>
+
+              <div className="space-y-10">
+                {secciones.map((seccion) => (
+                  <section
+                    key={seccion.letra}
+                    id={`letra-${seccion.letra}`}
+                    className="scroll-mt-28"
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <span
+                        className="font-display font-bold text-3xl leading-none text-ink/85"
+                        aria-hidden="true"
                       >
-                        {e.termino}
-                      </h3>
-                      <p className="mt-1 text-ink/70">
-                        Véase{" "}
-                        <a
-                          href={`#${getId(e.redirige)}`}
-                          className="underline decoration-ink/30 hover:decoration-ink transition-colors focus-visible:outline-2 focus-visible:outline-ink"
-                        >
-                          {e.redirige}
-                        </a>
-                        .
-                      </p>
-                    </article>
-                  ) : (
-                    <article
-                      key={e.id}
-                      id={e.id}
-                      className="scroll-mt-44 py-6 border-b border-ink/10"
-                    >
-                      {/* Si la entrada tiene definición, se muestra término, etiqueta, nota y enlace relacionado. */}
-                      <div className="flex items-baseline justify-between gap-3 flex-wrap">
-                        <h3
-                          className="font-display font-bold text-xl sm:text-2xl tracking-tight text-ink"
-                          style={{ fontStretch: "125%" }}
-                        >
-                          {e.termino}
-                        </h3>
-                        {e.alt && (
-                          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink/45">
-                            {e.alt}
-                          </p>
-                        )}
-                      </div>
-
-                      <span className="mt-2 inline-block font-mono text-[9px] uppercase tracking-[0.2em] text-ink/50 border border-ink/15 rounded-full px-2 py-0.5">
-                        {e.cat}
+                        {seccion.letra}
                       </span>
+                      <div className="h-px flex-1 bg-ink/10" aria-hidden="true" />
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-fog">
+                        {seccion.entradas.length}{" "}
+                        {seccion.entradas.length === 1 ? "término" : "términos"}
+                      </span>
+                    </div>
 
-                      <p className="mt-3 text-ink/75 leading-relaxed max-w-2xl">
-                        {e.def}
-                      </p>
-
-                      {e.nota && (
-                        <p className="mt-2 font-mono text-[11px] text-ink/45 italic">
-                          {e.nota}
-                        </p>
-                      )}
-
-                      {e.ref && (
-                        <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.18em] text-ink/45">
-                          Se lee en{" "}
-                          <Link
-                            to={e.ref.to}
-                            className="underline decoration-ink/30 hover:decoration-ink hover:text-ink transition-colors focus-visible:outline-2 focus-visible:outline-ink"
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {seccion.entradas.map((e) => {
+                        const color = CATEGORIAS[e.grupo]?.color ?? "#5b6b7b";
+                        return (
+                          <article
+                            key={e.id}
+                            id={e.id}
+                            className="card card-interactive group h-full flex flex-col p-5 sm:p-6"
                           >
-                            {e.ref.texto}
-                          </Link>
-                        </p>
-                      )}
-                    </article>
-                  ),
-                )}
-              </section>
-            );
-          })}
-        </main>
+                            <header className="flex items-start justify-between gap-3">
+                              <h3 className="font-display font-bold text-xl sm:text-2xl tracking-tight text-ink">
+                                {e.termino}
+                              </h3>
+                              {e.alt && (
+                                <span className="shrink-0 tag bg-aire/10 text-aire-deep">
+                                  {e.alt}
+                                </span>
+                              )}
+                            </header>
 
-        <footer className="mt-16 sm:mt-24 pt-8 border-t border-ink/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-center">
-          <p className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-ink/45">
-            Diccionario del aire · Edición no oficial
-          </p>
-          <p className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-ink/45">
-            Palabras medidas en Lima, Perú
-          </p>
-        </footer>
+                            <div className="mt-3 flex items-center gap-2">
+                              <span className="tag">
+                                <span
+                                  className="tag-dot"
+                                  style={{ background: color }}
+                                  aria-hidden="true"
+                                />
+                                {e.grupo}
+                              </span>
+                            </div>
+
+                            <p className="mt-4 text-[15px] text-slate leading-relaxed grow">
+                              {e.def}
+                            </p>
+
+                            {e.nota && (
+                              <p className="mt-3 text-sm italic text-fog border-l-2 border-aire/30 pl-3">
+                                {e.nota}
+                              </p>
+                            )}
+
+                            <footer className="mt-5 pt-4 border-t border-ink/10 flex flex-wrap items-center justify-between gap-2">
+                              {e.alias ? (
+                                <span className="font-mono text-[10px] uppercase tracking-wider text-fog">
+                                  También: {e.alias.join(" · ")}
+                                </span>
+                              ) : (
+                                <span />
+                              )}
+                              {e.ref && (
+                                <Link
+                                  to={e.ref.to}
+                                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-aire-deep hover:text-ink transition-colors"
+                                >
+                                  Leer en {e.ref.texto}
+                                  <i
+                                    className="bi bi-arrow-right transition-transform duration-300 group-hover:translate-x-1"
+                                    aria-hidden="true"
+                                  />
+                                </Link>
+                              )}
+                            </footer>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            </div>
+
+            <aside
+              className="hidden lg:flex flex-col items-stretch gap-1 sticky top-24"
+              aria-label="Índice alfabético"
+            >
+              {secciones.map(({ letra, entradas }) => (
+                <button
+                  key={letra}
+                  type="button"
+                  onClick={() => irALetra(letra)}
+                  title={`Ir a la letra ${letra}`}
+                  className="flex items-center justify-between gap-1 px-2.5 py-1.5 rounded-lg font-mono text-xs text-slate hover:text-ink hover:bg-white hover:border-aire/30 border border-transparent transition-colors"
+                >
+                  {letra}
+                  <span className="text-[9px] text-fog">{entradas.length}</span>
+                </button>
+              ))}
+            </aside>
+          </main>
+        )}
       </div>
     </div>
   );
