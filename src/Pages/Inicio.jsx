@@ -2,6 +2,19 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { BANDAS, getBanda } from "../lib/aire";
 
+const MAX_ESCALA = 40;
+
+const segmentos = BANDAS.map((b, i) => {
+  const desde = i === 0 ? 0 : BANDAS[i - 1].max;
+  const hasta = b.max === Number.POSITIVE_INFINITY ? MAX_ESCALA : b.max;
+  return { ...b, desde, hasta, ancho: ((hasta - desde) / MAX_ESCALA) * 100 };
+});
+
+const rangoLabel = (b) =>
+  b.max === Number.POSITIVE_INFINITY
+    ? `${b.desde + 1}+`
+    : `${b.desde}–${b.hasta}`;
+
 const FEATURES = [
   {
     icon: "bi-activity",
@@ -22,7 +35,7 @@ const Inicio = ({ currentPm25 }) => {
   const minuto = new Date().getMinutes().toString().padStart(2, "0");
   const valor = Number(currentPm25).toFixed(2);
   const banda = getBanda(currentPm25);
-  const posicion = Math.min(100, Math.max(0, (currentPm25 / 40) * 100));
+  const posicion = Math.min(100, Math.max(0, (currentPm25 / MAX_ESCALA) * 100));
 
   return (
     <div className="atmosphere min-h-screen pt-28 sm:pt-32 pb-24">
@@ -122,19 +135,29 @@ const Inicio = ({ currentPm25 }) => {
 
               <div className="mt-7">
                 <div className="flex h-2 rounded-full overflow-hidden">
-                  {BANDAS.map((b) => (
+                  {segmentos.map((b) => (
                     <div
                       key={b.label}
                       className="h-full"
                       style={{
-                        width: b.max === Number.POSITIVE_INFINITY ? "auto" : `${(b.max / 40) * 100}%`,
-                        flexGrow: b.max === Number.POSITIVE_INFINITY ? 1 : 0,
                         background: b.color,
+                        minWidth: b.max === Number.POSITIVE_INFINITY ? `${b.ancho}%` : undefined,
+                        width: b.max === Number.POSITIVE_INFINITY ? undefined : `${b.ancho}%`,
+                        flexGrow: b.max === Number.POSITIVE_INFINITY ? 1 : 0,
                       }}
                     />
                   ))}
                 </div>
                 <div className="relative mt-1.5 h-4">
+                  {segmentos.map((b) => (
+                    <span
+                      key={b.label}
+                      className="absolute -translate-x-1/2 font-mono text-[10px] uppercase tracking-wider text-fog"
+                      style={{ left: `${((b.desde + b.hasta) / 2 / MAX_ESCALA) * 100}%` }}
+                    >
+                      {rangoLabel(b)}
+                    </span>
+                  ))}
                   <div
                     className="absolute top-0 -translate-x-1/2 transition-all duration-700"
                     style={{ left: `${posicion}%` }}
@@ -144,13 +167,6 @@ const Inicio = ({ currentPm25 }) => {
                       style={{ background: banda.color, boxShadow: `0 0 0 3px rgba(255,255,255,0.9), 0 2px 6px rgba(11,21,32,0.25)` }}
                     />
                   </div>
-                </div>
-                <div className="flex justify-between font-mono text-[10px] uppercase tracking-wider text-fog mt-1">
-                  {BANDAS.map((b) => (
-                    <span key={b.label}>
-                      {b.label} {b.max === Number.POSITIVE_INFINITY ? "36+" : `0–${b.max}`}
-                    </span>
-                  ))}
                 </div>
               </div>
 
@@ -173,22 +189,32 @@ const Inicio = ({ currentPm25 }) => {
 
           <div className="card mt-5 p-5 sm:p-7">
             <div className="flex h-2.5 rounded-full overflow-hidden">
-              {BANDAS.map((b) => (
+              {segmentos.map((b) => (
                 <div
                   key={b.label}
                   className="h-full"
                   style={{
-                    width: b.max === Number.POSITIVE_INFINITY ? "auto" : `${(b.max / 40) * 100}%`,
-                    flexGrow: b.max === Number.POSITIVE_INFINITY ? 1 : 0,
                     background: b.color,
+                    minWidth: b.max === Number.POSITIVE_INFINITY ? `${b.ancho}%` : undefined,
+                    width: b.max === Number.POSITIVE_INFINITY ? undefined : `${b.ancho}%`,
+                    flexGrow: b.max === Number.POSITIVE_INFINITY ? 1 : 0,
                   }}
                 />
               ))}
             </div>
 
             <div className="relative mt-2 h-6">
+              {segmentos.map((b) => (
+                <span
+                  key={b.label}
+                  className="absolute -top-0.5 -translate-x-1/2 font-mono text-[10px] uppercase tracking-wider text-fog"
+                  style={{ left: `${((b.desde + b.hasta) / 2 / MAX_ESCALA) * 100}%` }}
+                >
+                  {rangoLabel(b)}
+                </span>
+              ))}
               <div
-                className="absolute top-0 -translate-x-1/2 transition-all duration-700"
+                className="absolute top-2 -translate-x-1/2 transition-all duration-700"
                 style={{ left: `${posicion}%` }}
               >
                 <span
@@ -225,7 +251,7 @@ const Inicio = ({ currentPm25 }) => {
                       <p className="font-semibold text-sm text-ink">{b.label}</p>
                     </div>
                     <p className="mt-1.5 font-mono text-[11px] uppercase tracking-wider text-slate">
-                      {b.max === Number.POSITIVE_INFINITY ? "36+ µg/m³" : `0–${b.max} µg/m³`}
+                      {rangoLabel(b)} µg/m³
                     </p>
                   </div>
                 );
