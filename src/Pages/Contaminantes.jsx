@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
+// La información de los contaminantes se basa en datos de la OMS, EPA y estudios científicos sobre contaminación del aire. Los efectos y orígenes son simplificados para fines educativos y no sustituyen asesoramiento médico o ambiental profesional.
 const especimenes = [
   { id: "01", codigo: "PM2.5", nombre: "Partículas finas", tipo: "partícula", color: "#d6452f", tamano: "2.5 µm", diametro: 4, origen: "Motores diésel, humo de quema, cocinas a leña.", efecto: "Se cuela hasta los alvéolos y sigue de viaje a la sangre.", nota: "El más fino. El que más molesta." },
   { id: "02", codigo: "PM10", nombre: "Partículas gruesas", tipo: "partícula", color: "#c97f1d", tamano: "10 µm", diametro: 17, origen: "Polvo de calles y obras, tierra levantada.", efecto: "Se atora en la nariz y la garganta.", nota: "Se ve más. Se atora antes." },
@@ -10,6 +11,7 @@ const especimenes = [
   { id: "06", codigo: "O₃", nombre: "Ozono troposférico", tipo: "gas", color: "#2f8fa8", tamano: "Invisible", origen: "No sale de un caño: sol + NOx + paciencia.", efecto: "Pincha la garganta en los días soleados.", nota: "El mismo ozono de arriba, portándose mal acá abajo." },
 ];
 
+// sirve para renderizar cada espécimen en la lista, aplicando estilos y animaciones según su tipo y posición en la colección
 const renderSpecimen = (specimen, index) => {
   const isGas = specimen.tipo === "gas";
 
