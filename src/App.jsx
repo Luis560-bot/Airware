@@ -20,6 +20,8 @@ const formatHourKey = (value) => {
 
 function App() {
   const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const currentPm25 = data
     ? (() => {
@@ -92,8 +94,12 @@ function App() {
 
         // Guardar los datos en el estado
         setData(weatherData);
+        setError(null);
       } catch (error) {
         console.error("Error obteniendo datos:", error);
+        setError(error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -103,20 +109,29 @@ function App() {
   return (
     <BrowserRouter>
       <Navbar currentPm25={currentPm25} />
-      {data ? (
-        <Routes>
-          <Route path="/" element={<Inicio currentPm25={currentPm25} />} />
-          <Route
-            path="/contaminantes"
-            element={<Contaminantes currentPm25={currentPm25} />}
-          />
-          <Route
-            path="/glosario"
-            element={<Glosario currentPm25={currentPm25} />}
-          />
-        </Routes>
-      ) : (
+      {loading ? (
         <Cargando />
+      ) : (
+        <>
+          {error ? (
+            <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-6">
+              <div className="card border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                No se pudo actualizar la lectura en tiempo real. Mostrando una lectura temporal.
+              </div>
+            </div>
+          ) : null}
+          <Routes>
+            <Route path="/" element={<Inicio currentPm25={currentPm25} />} />
+            <Route
+              path="/contaminantes"
+              element={<Contaminantes currentPm25={currentPm25} />}
+            />
+            <Route
+              path="/glosario"
+              element={<Glosario currentPm25={currentPm25} />}
+            />
+          </Routes>
+        </>
       )}
       <Footer />
     </BrowserRouter>
